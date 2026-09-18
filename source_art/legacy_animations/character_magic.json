@@ -1,0 +1,24 @@
+{
+ "group": "magic",
+ "frames": 14,
+ "frame_w": 156,
+ "frame_h": 107,
+ "anchor_x": 71,
+ "anchor_y": 103,
+ "vertical_offsets": [
+  0,
+  0,
+  0,
+  1,
+  1,
+  1,
+  2,
+  1,
+  2,
+  2,
+  2,
+  0,
+  2,
+  1
+ ]
+}

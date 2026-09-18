@@ -1,0 +1,54 @@
+{
+  "fox_r00_c00.png": {
+    "origin": "game/assets/cut/character/fox_r00_c00.png",
+    "sha256": "8ac0f2f70d0a1ee997a0aaed02ce30ba399e9c34fbea00d6f3f9e1d3325effd4"
+  },
+  "fox_r00_c01.png": {
+    "origin": "game/assets/cut/character/fox_r00_c01.png",
+    "sha256": "4a50dfc504425ccb6992bd6f5b20ec0f85705abf903d927f854ef6ab410c5abc"
+  },
+  "fox_r00_c02.png": {
+    "origin": "game/assets/cut/character/fox_r00_c02.png",
+    "sha256": "e3e5fc5e459d187398dcf40506cad9a79a6a85ce093f74bc9682d2a9ec797759"
+  },
+  "fox_r00_c03.png": {
+    "origin": "game/assets/cut/character/fox_r00_c03.png",
+    "sha256": "ecd8e21a4f20c8003fb31e8d4c99be108dab82e4389474045f6c9a4f224264fc"
+  },
+  "fox_r00_c05.png": {
+    "origin": "game/assets/cut/character/fox_r00_c05.png",
+    "sha256": "ea3f7b42382fb8995e0c611059854ab330cd94eb55d44a8fc2525aa47499bc8d"
+  },
+  "fox_r00_c06.png": {
+    "origin": "game/assets/cut/character/fox_r00_c06.png",
+    "sha256": "fef0ca9f8197640098fb6dc7e035307c3bd6a3a8a5b56267b78c7aef188fb723"
+  },
+  "fox_r00_c07.png": {
+    "origin": "game/assets/cut/character/fox_r00_c07.png",
+    "sha256": "3f2458446ab42abfdd7fa375d42d1e3b0f75fdab283dba2d792d7e89122839e1"
+  },
+  "fox_r00_c08.png": {
+    "origin": "game/assets/cut/character/fox_r00_c08.png",
+    "sha256": "c88ebff811be1ba90895c0efa9a2b263e0db82f7e0f829c38d4c00bc56abe73d"
+  },
+  "fox_r00_c09.png": {
+    "origin": "game/assets/cut/character/fox_r00_c09.png",
+    "sha256": "c1353c9f6d5ef8a1c868a231aa1ec02a8e6d54de9419738ab432598310f61b46"
+  },
+  "fox_r00_c10.png": {
+    "origin": "game/assets/cut/character/fox_r00_c10.png",
+    "sha256": "497b32d4cfbd47833341724418b2e817b5ffb9e56f523d91221d18c9ce83a44f"
+  },
+  "fox_r00_c11.png": {
+    "origin": "game/assets/cut/character/fox_r00_c11.png",
+    "sha256": "52447437f793047e377a9f71894b8d950c32c256ac3802922ecfdc5aebc1cabc"
+  },
+  "fox_r00_c14.png": {
+    "origin": "game/assets/cut/character/fox_r00_c14.png",
+    "sha256": "d08e5cf6867392f59724da5095d11c34498323761dace7087976d0a048ef6e76"
+  },
+  "fox_r01_c00.png": {
+    "origin": "game/assets/cut/character/fox_r01_c00.png",
+    "sha256": "71fb35c360f60663d1d3b6b994d64a4d42b5c2d118f7de86c1ede16e05079aa9"
+  }
+}

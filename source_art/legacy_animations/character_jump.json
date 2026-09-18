@@ -1,0 +1,26 @@
+{
+ "group": "jump",
+ "frames": 16,
+ "frame_w": 190,
+ "frame_h": 105,
+ "anchor_x": 96,
+ "anchor_y": 101,
+ "vertical_offsets": [
+  4,
+  6,
+  13,
+  14,
+  30,
+  9,
+  8,
+  5,
+  5,
+  17,
+  1,
+  1,
+  0,
+  1,
+  2,
+  2
+ ]
+}

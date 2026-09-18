@@ -1,0 +1,25 @@
+{
+ "group": "walk",
+ "frames": 15,
+ "frame_w": 151,
+ "frame_h": 96,
+ "anchor_x": 64,
+ "anchor_y": 92,
+ "vertical_offsets": [
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  2,
+  3,
+  3,
+  3,
+  4,
+  2,
+  2,
+  2
+ ]
+}

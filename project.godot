@@ -1,0 +1,31 @@
+; Embertrail — original Godot 4 platformer.
+config_version=5
+
+[application]
+config/name="Embertrail: The Last Lantern"
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/description="An original fox-spirit adventure through the Lanternwood."
+
+[display]
+window/size/viewport_width=960
+window/size/viewport_height=540
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.82, 0.87, 0.79, 1)
+
+[physics]
+common/physics_ticks_per_second=60
+2d/default_gravity=1350.0
+
+[layer_names]
+2d_physics/layer_1="Terrain"
+2d_physics/layer_2="Player"
+2d_physics/layer_3="Enemies"

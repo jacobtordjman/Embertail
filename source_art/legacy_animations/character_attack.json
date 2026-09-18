@@ -1,0 +1,26 @@
+{
+ "group": "attack",
+ "frames": 16,
+ "frame_w": 117,
+ "frame_h": 101,
+ "anchor_x": 56,
+ "anchor_y": 97,
+ "vertical_offsets": [
+  6,
+  7,
+  6,
+  7,
+  7,
+  7,
+  7,
+  7,
+  6,
+  6,
+  7,
+  5,
+  4,
+  0,
+  7,
+  7
+ ]
+}
