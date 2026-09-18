@@ -56,7 +56,7 @@ Basic controller bindings are included: left stick to move, A to jump, X to dash
 
 - One 6,240-pixel level, 17 raised platforms, four gaps, five thorn beds, six patrolling beetles, 84 collectible embers, two checkpoints, and a final shrine.
 - Responsive walk/run movement, acceleration/friction, variable jumping, coyote time, jump buffer, air dash, knockback, invulnerability, and death/respawn.
-- Ten fox animation states with 42 playback frames assembled from 27 supplied sprites, animated items/enemies, local generated tile art, parallax scenery, dust/sparkle/defeat effects, landing squash, hurt flashing, and camera shake.
+- Eleven fox animation states with 44 playback frames assembled from 28 supplied sprites, animated items/enemies, local generated tile art, parallax scenery, dust/sparkle/defeat effects, landing squash, hurt flashing, and camera shake.
 - Main menu, HUD, pause, game over, level complete, and replay flow.
 - Eight synthesized sound effects and a quiet original looping music sketch.
 
@@ -70,7 +70,7 @@ Basic controller bindings are included: left stick to move, A to jump, X to dash
 | `scenes/enemy.tscn`, `collectible.tscn`, `hazard.tscn`, `checkpoint.tscn`, `level_goal.tscn` | Reusable gameplay objects |
 | `ui/hud.tscn`, `ui/menus.tscn` | Reusable HUD and menu scenes |
 | `tools/generate_assets.py` | Local player import, world-art and audio generation |
-| `tools/generate_player.py` / `assets/sprites/player_frames.tres` | Supplied-art importer and ten animation states |
+| `tools/generate_player.py` / `assets/sprites/player_frames.tres` | Supplied-art importer and eleven animation states |
 | `tests/run_checks.sh` | Import, behavioral tests, and physical full-level traversal |
 | `docs/BUILD_PASSES.md` | Three build–test–refine passes and remaining limitations |
 | `assets/ASSET_MANIFEST.md` | Asset layouts, palette, and provenance |
@@ -87,7 +87,7 @@ godot --headless --path . --editor --import --quit
 godot --headless --path . --export-pack 'Desktop Pack' builds/embertrail.pck
 ```
 
-The final check includes **139 passing behavioral assertions** (101 game-flow checks and 38 character-specific checks) and a separate full-level run using only actual input actions and collisions. That route completed with 45 embers, both checkpoints, and all three lives. Import/runtime errors fail the test runner even when Godot returns exit code zero. Logs are in `tests/results/`.
+The final check includes **141 passing behavioral assertions** (101 game-flow checks and 40 character-specific checks) and a separate full-level run using only actual input actions and collisions. That route completed with 45 embers, both checkpoints, and all three lives. Import/runtime errors fail the test runner even when Godot returns exit code zero. Logs are in `tests/results/`.
 
 To regenerate rendered screenshots of all five screens:
 
@@ -99,7 +99,7 @@ The screenshot harness deliberately sets up screen states; the independent trave
 
 ## Character refinement
 
-The player now uses 27 of your supplied fox sprites directly, preserving their face, swept tails, cream robe and burgundy trim. Feet are aligned across differently cropped images, with separate upright walking and leaning running cycles. The first expansion pass replaced the whole-image tilts that previously stood in for jump, fall, hurt and death with separately drawn poses from the same sheet, and split the airborne arc into ascent, apex and descent. Dash still animates a single supplied burst pose. The controller adds quicker turns/stops, separate rise/fall gravity, dedicated interruptible landing animation, a cleaner dash exit, short buffered hops, and reliable high-speed stomps.
+The player now uses 28 of your supplied fox sprites directly, preserving their face, swept tails, cream robe and burgundy trim. Feet are aligned across differently cropped images, with separate upright walking and leaning running cycles. The first expansion pass replaced the whole-image tilts that previously stood in for jump, fall, hurt and death with separately drawn poses from the same sheet, and split the airborne arc into ascent, apex and descent. A braking skid plays when a reversal is input at speed. Walk and run cadence advances with distance travelled rather than elapsed time, so foot spacing stays consistent at every speed and the cycle phase survives a walk/run swap. Dash still animates a single supplied burst pose. The controller adds quicker turns/stops, separate rise/fall gravity, dedicated interruptible landing animation, a cleaner dash exit, short buffered hops, and reliable high-speed stomps.
 
 See [supplied-art integration notes](docs/character/supplied/README.md) and [earlier controller notes](docs/character/REFINEMENT.md), the [interactive before/after animation review](docs/character/review.html), [motion study](docs/character/animation-review.mp4), and [rendered playthrough](docs/character/gameplay-review.mp4).
 
@@ -109,4 +109,4 @@ This is a short, single-level prototype with one enemy type and synthesized plac
 
 Next: add a second biome, a second enemy pattern, bespoke music, remappable controls, and platform-specific standalone exports after installing the free export templates.
 
-World graphics and audio were generated locally from original drawing/synthesis code. Player artwork uses 27 user-provided PNGs, preserved in assets/sprites/source_fox with provenance hashes recorded for every adopted crop. The original large reference image and additional pose sheet are archived under `source_art/` for future animation work; they are excluded from the runtime resource pack. No downloaded asset packs or paid services were used.
+World graphics and audio were generated locally from original drawing/synthesis code. Player artwork uses 28 user-provided PNGs, preserved in assets/sprites/source_fox with provenance hashes recorded for every adopted crop. The original large reference image and additional pose sheet are archived under `source_art/` for future animation work; they are excluded from the runtime resource pack. No downloaded asset packs or paid services were used.

@@ -54,14 +54,14 @@ func run_checks() -> void:
 		if kind == "land": landing_sounds += 1)
 	var animations: SpriteFrames = player.sprite.sprite_frames
 	var sheet: Image = load("res://assets/sprites/player.png").get_image()
-	check(sheet.get_size() == Vector2i(1280, 1600), "supplied sprites use consistently padded 160px cells")
+	check(sheet.get_size() == Vector2i(1280, 1760), "supplied sprites use consistently padded 160px cells")
 	var total_frames: int = 0
 	var valid_cells: bool = true
 	var no_clipping: bool = true
 	var distinct_states: bool = true
 	# Grounded states must share one floor line; a state whose feet wander would
 	# make the character pop vertically as it switches pose.
-	var grounded_states: Array[String] = ["idle", "walk", "run", "land", "hurt", "death"]
+	var grounded_states: Array[String] = ["idle", "walk", "run", "land", "hurt", "death", "skid"]
 	var grounded_aligned: bool = true
 	var library: Dictionary = {}
 	for name in animations.get_animation_names():
@@ -71,7 +71,7 @@ func run_checks() -> void:
 		for index in range(animations.get_frame_count(name)):
 			var texture: AtlasTexture = animations.get_frame_texture(name, index)
 			var region := Rect2i(texture.region)
-			valid_cells = valid_cells and region.size == Vector2i(160, 160) and Rect2i(0, 0, 1280, 1600).encloses(region)
+			valid_cells = valid_cells and region.size == Vector2i(160, 160) and Rect2i(0, 0, 1280, 1760).encloses(region)
 			var cell: Image = sheet.get_region(region)
 			var used: Rect2i = cell.get_used_rect()
 			no_clipping = no_clipping and used.position.x > 0 and used.position.y > 0 and used.end.x < 160 and used.end.y < 160
@@ -84,13 +84,13 @@ func run_checks() -> void:
 		distinct_states = distinct_states and fingerprints.size() >= mini(3, animations.get_frame_count(name))
 		if name in grounded_states:
 			grounded_aligned = grounded_aligned and lowest - highest <= 3
-	check(total_frames == 42 and valid_cells, "all 42 playback frames have valid atlas regions")
+	check(total_frames == 44 and valid_cells, "all 44 playback frames have valid atlas regions")
 	check(no_clipping, "ears, paws and tails remain inside every animation cell")
 	check(distinct_states, "every state contains distinct poses instead of repeated still frames")
 	check(grounded_aligned, "grounded states keep their feet on a shared floor line")
 	# The expansion replaced whole-image tilts with separately drawn source art,
 	# so the atlas must hold materially more unique cells than states.
-	check(library.size() >= 24, "atlas holds at least 24 distinct poses rather than repeated transforms")
+	check(library.size() >= 26, "atlas holds at least 26 distinct poses rather than repeated transforms")
 	check(animations.has_animation("land") and not animations.get_animation_loop("land"), "landing has a dedicated non-looping recovery")
 	check(animations.get_frame_count("run") == 4 and animations.get_animation_loop("run"), "supplied running poses play as a continuous cycle")
 	check(not animations.get_animation_loop("death"), "death settles without looping")
@@ -148,6 +148,26 @@ func run_checks() -> void:
 	await frames(8)
 	check(player.velocity.x < 0.0 and player.facing < 0.0, "direction reversal responds within eight physics frames")
 	check(player.sprite.position.x > 0, "mirrored art keeps its feet centered on the collision body")
+
+	# A braking pose must appear while travel still opposes facing, and must not
+	# delay the reversal itself: the turn is asserted above on the same inputs.
+	await place(Vector2(400, 465))
+	await frames(5)
+	Input.action_press("move_right")
+	Input.action_press("run")
+	await frames(30)
+	var top_speed: float = player.velocity.x
+	Input.action_release("move_right")
+	Input.action_press("move_left")
+	var saw_skid: bool = false
+	for _i in range(10):
+		await frames(1)
+		if player.sprite.animation == &"skid":
+			saw_skid = true
+	check(top_speed > 300.0 and saw_skid, "braking into a reversal shows the skid pose")
+	await frames(20)
+	check(player.sprite.animation != &"skid", "the skid pose releases once travel matches facing")
+	release()
 
 	await place(Vector2(150, 465))
 	await frames(5)

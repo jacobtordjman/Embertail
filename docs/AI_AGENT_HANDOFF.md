@@ -4,7 +4,7 @@ Workspace audit: **2026-09-18**, macOS, Godot **4.7.1.stable.official.a13da4feb*
 
 **Start here:** `/Users/JacobT/p/embertrail` is the active project. `/Users/JacobT/p/game` is a separate Godot project and asset collection, not another folder inside Embertrail. Their `res://` roots, player implementations, and animation loaders differ. Portable read-only copies of its character references are included under `source_art/` in the GitHub repository. Do not launch or edit the sibling project accidentally.
 
-Expansion pass 1 is complete. The current baseline is **ten states / 42 playback frames drawn from 27 supplied PNGs**; see `docs/character/supplied/README.md` for that pass's record, findings and remaining limitations. Passes 2 and 3 of the expansion described at the end are still open. No new image-generation service, package, or plugin is needed to read, run, or regenerate the current Embertrail project.
+Expansion passes 1 and 2 are complete. The current baseline is **eleven states / 44 playback frames drawn from 28 supplied PNGs**, with locomotion cadence driven by distance travelled; see `docs/character/supplied/README.md` for both passes' records, findings and remaining limitations. Pass 3 of the expansion described at the end is still open. No new image-generation service, package, or plugin is needed to read, run, or regenerate the current Embertrail project.
 
 ## 1. Project overview and verified state
 
@@ -17,12 +17,12 @@ The project uses GDScript, Godot's compatibility renderer, a 960×540 logical vi
 Fresh audit validation:
 
 - `tests/integration.gd`: **101/101** passing assertions.
-- `tests/character.gd`: **38/38** passing assertions.
+- `tests/character.gd`: **40/40** passing assertions.
 - `tests/traversal.gd`: actual input/collision completion at x=5993, 45 embers, both checkpoints, 13 jumps, four dashes, three lives; 19.08 simulated seconds.
 - No `ERROR:` or `SCRIPT ERROR:` in the successful runner output. Current logs are under `tests/results/`.
 - Prior rendered reviews and a packed-build launch are recorded under `docs/character/supplied/`.
 
-These tests verify behavior; they do not establish that the animation is artistically finished. The current motion set is still limited: repeated run/idle frames, no dedicated start-run, stop/skid, turnaround or victory state, and a dash that animates a single supplied drawing. Pass 1 removed the whole-image tilts from jump, fall, hurt, death and landing and added an apex state, but did not add in-betweens. Audio is synthesized placeholder work. There is one level and enemy type, no save/rebinding screen, and no verified Windows/Linux/controller-hardware release. The `.pck` requires Godot; it is not a standalone application.
+These tests verify behavior; they do not establish that the animation is artistically finished. The current motion set is still limited: the run is a three-pose cycle, there is no start-run, turnaround or victory state, and the dash animates a single supplied drawing. Pass 1 removed the whole-image tilts from jump, fall, hurt, death and landing and added an apex state; pass 2 added a braking skid and made locomotion cadence distance-driven. Neither pass added in-betweens. Audio is synthesized placeholder work. There is one level and enemy type, no save/rebinding screen, and no verified Windows/Linux/controller-hardware release. The `.pck` requires Godot; it is not a standalone application.
 
 ## 2. Exact workspace map
 
@@ -59,15 +59,15 @@ There is **no authored TileMap/TileMapLayer, TileSet `.tres`, AnimationPlayer, s
 
 | Exact relative path | Shape / purpose / consumer | Classification; modify by |
 | --- | --- | --- |
-| `assets/sprites/source_fox/` | 28 original user-supplied cropped PNGs (13 original + 15 adopted in pass 1, 14 of them wired); importer inputs | Source; preserve unchanged |
+| `assets/sprites/source_fox/` | 28 original user-supplied cropped PNGs (13 original + 15 adopted in pass 1); all 28 are wired to states as of pass 2 | Source; preserve unchanged |
 | `source_art/character_reference.png` | Portable copy of the initial 1024×572 reference | Source; preserve unchanged, not used at runtime |
 | `source_art/character_sheet.png`, `source_art/character_index.png` | Portable copies of the larger composite sheet and visual index | Source/review; preserve, inspect before selecting new poses |
 | `source_art/cuts/` | 162 existing extra cropped character PNGs plus manifest/names | Source candidates; not active runtime inputs |
 | `source_art/legacy_animations/` | Existing padded frames, strips and JSON from the sibling project | Reference candidates; visually check labels and metadata |
 | `source_art/README.md` | Portable art inventory and provenance caveats | Authored; update when adding art |
 | `assets/sprites/source_fox/provenance.json` | Original workspace-relative paths and SHA256 for each copy | Authored provenance record; append verified entries for new sources |
-| `assets/sprites/player.png` | 1280×1600 RGBA atlas, 160px cells, eight columns, ten rows | Generated by `tools/import_player_sprites.gd`; consumed through SpriteFrames |
-| `assets/sprites/player_frames.tres` | AtlasTexture regions, ten animation definitions, anchor/portrait metadata | Generated by importer; player scene and menu art load it |
+| `assets/sprites/player.png` | 1280×1760 RGBA atlas, 160px cells, eight columns, eleven rows | Generated by `tools/import_player_sprites.gd`; consumed through SpriteFrames |
+| `assets/sprites/player_frames.tres` | AtlasTexture regions, eleven animation definitions, anchor/portrait metadata | Generated by importer; player scene and menu art load it |
 | `assets/sprites/enemy.png` | 160×64, 40×32 cells, four columns; beetle motion/defeat art | Generated by `tools/generate_assets.py`; enemy scene/script |
 | `assets/sprites/coin.png` | 144×24, six 24px frames | Generated by same script; collectible scene/script |
 | `assets/sprites/heart.png` | 16×16 HUD icon | Generated by same script; `scripts/hud.gd` |
@@ -99,12 +99,14 @@ All active non-player art and audio were created by local drawing/synthesis code
 | `tools/generate_player.py` | Wrapper selecting supplied importer; contains earlier procedural fallback | Authored; entry point for character-only regeneration |
 | `tools/pixel_canvas.py` | Standard-library RGBA rasterizer and PNG writer | Authored; polygons/lines/ellipses, used by world/fallback generation |
 | `tools/generate_assets.py` | Rebuilds player, world PNGs and all nine WAVs | Authored; avoid for a character-only change unless deliberately testing complete reproduction |
-| `tools/review_character.gd` | Rendered nine-state animation review; saves screenshot at frame 180 | Authored; update state list/layout with animation expansion |
+| `tools/review_character.gd` | Rendered animation review with shared feet-anchor guides; reads the state list from the resource | Authored; layout is data-driven and needs no edit when states change |
 | `tools/capture_screens.gd` | Captures menu, gameplay, pause, game over, complete | Authored; intentionally sets up states and teleports near goal for capture |
+| `tools/evaluate_motion.gd` | Measures cadence vs distance, animation thrash with neighbours, state coverage and arc ordering over the real route | Authored; measurement only, asserts nothing |
+| `tools/inspect_poses.gd` | Magnifies named source crops side by side for classifying poses before adoption | Authored; pass crop names after `--` |
 | `tests/run_checks.sh` | Editor import + three SceneTree test harnesses; catches logged errors even on exit 0 | Authored; canonical project check command |
 | `tests/integration.gd` | 101 resource, UI, physics, interaction and game-flow checks | Authored; preserve behavioral coverage |
 | `tests/traversal.gd` | Physical full-level run using real input actions | Authored; no teleport/health overrides |
-| `tests/character.gd` | 38 atlas/state/controller/collision regressions | Authored; update structural expectations for expanded sheet; keep behavioral assertions |
+| `tests/character.gd` | 40 atlas/state/controller/collision regressions | Authored; update structural expectations for expanded sheet; keep behavioral assertions |
 | `tests/results/{import,integration,traversal,character}.log` | Latest runner console outputs | Generated; runner overwrites |
 | `tests/results/{import,integration,traversal,character}.engine.log` | Latest Godot engine logs | Generated; runner overwrites |
 | `tests/README.md` | Test instructions and historical results | Authored |
@@ -319,10 +321,11 @@ Use RGBA PNGs with actual transparency. No baked checkerboard/ground slab/neighb
 | 7 hurt | 4 | 11 | No | hit,topple,dazed,kneel; four drawn poses |
 | 8 death | 4 | 9 | No | hit,topple,downed,downed; three drawn poses settling prone |
 | 9 land | 4 | 15 | No | land_hit,land_rise,crouch,00; four drawn poses |
+| 10 skid | 2 | 12 | No | skid_brake,10; brake pose recovering through the run's passing pose |
 
-Source keys `00`–`14` mean `fox_r00_cNN.png`; `crouch` means `fox_r01_c00.png`. Named keys map to adopted row 1 and row 6 crops; see `SOURCES` in the importer. There is no separate melee attack, anticipation, start-run, stop/skid, turn, or victory state in the active game. `fox_r01_c09` (a braking skid) is adopted and hashed but not yet wired to a state.
+Source keys `00`–`14` mean `fox_r00_cNN.png`; `crouch` means `fox_r01_c00.png`. Named keys map to adopted row 1 and row 6 crops; see `SOURCES` in the importer. There is no separate melee attack, anticipation, start-run, turnaround or victory state in the active game. `fox_r01_c09` is wired to the skid state as of pass 2.
 
-`_update_visuals()` priority is: death → hurt → dash → rising jump (`velocity.y < -APEX_SPEED`, 90 px/s) → airborne apex or fall split on the same threshold → landing if timer active and abs(horizontal speed)<50 → locomotion if speed>12 → idle. Locomotion selects run above `WALK_SPEED+8` (233 px/s), otherwise walk. It calls `play()` only when the state changes, avoiding per-frame restarts. Walk/run `speed_scale = clamp(abs(velocity.x)/200, 0.45, 1.75)`; other states use 1.0. This is speed-dependent cadence, **not measured foot-contact distance matching**, so residual sliding is expected. Facing currently flips immediately on new directional input outside dash; no turn anticipation exists.
+`_update_visuals()` priority is: death → hurt → dash → rising jump (`velocity.y < -APEX_SPEED`, 90 px/s) → airborne apex or fall split on the same threshold → landing if timer active and abs(horizontal speed)<50 → locomotion if speed>12 → idle. Locomotion selects run above `WALK_SPEED+8` (233 px/s), otherwise walk. It calls `play()` only when the state changes, avoiding per-frame restarts. Walk and run no longer use `speed_scale`: pass 2 replaced it with a distance-driven phase (`WALK_STRIDE` 56px, `RUN_STRIDE` 68px per cycle) so foot spacing is constant at every speed and the cycle survives a walk/run swap. Other states use `speed_scale` 1.0. State selection is hysteretic (`LOCOMOTION_ENTER`/`EXIT`, `RUN_ENTER`/`EXIT`, `SLOW_DEBOUNCE`, `AIRBORNE_DEBOUNCE`) to stop one-frame flicker at thresholds. Facing still flips immediately on new directional input outside dash; a braking `skid` pose now plays while facing opposes travel above `SKID_SPEED`, but nothing delays the turn itself.
 
 ### How to add frames safely
 

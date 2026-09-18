@@ -170,6 +170,14 @@ region = Rect2(320, 1440, 160, 160)
 atlas = ExtResource("1")
 region = Rect2(480, 1440, 160, 160)
 
+[sub_resource type="AtlasTexture" id="skid0"]
+atlas = ExtResource("1")
+region = Rect2(0, 1600, 160, 160)
+
+[sub_resource type="AtlasTexture" id="skid1"]
+atlas = ExtResource("1")
+region = Rect2(160, 1600, 160, 160)
+
 [resource]
 metadata/frame_size = 160
 metadata/columns = 8
@@ -237,5 +245,9 @@ animations = [
 {"duration": 1.0, "texture": SubResource("land1")},
 {"duration": 1.0, "texture": SubResource("land2")},
 {"duration": 1.0, "texture": SubResource("land3")}
-], "loop": false, "name": &"land", "speed": 15.0}
+], "loop": false, "name": &"land", "speed": 15.0},
+{"frames": [
+{"duration": 1.0, "texture": SubResource("skid0")},
+{"duration": 1.0, "texture": SubResource("skid1")}
+], "loop": false, "name": &"skid", "speed": 12.0}
 ]

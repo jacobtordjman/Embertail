@@ -29,6 +29,29 @@ const FALL_LIMIT := 850.0
 # of velocity.y alone. Gravity moves velocity.y in one direction during free
 # flight, so the two thresholds cannot oscillate frame to frame.
 const APEX_SPEED := 90.0
+# Locomotion cadence is driven by world distance, not elapsed time, so the feet
+# keep the same contact spacing at every speed and the cycle phase survives a
+# walk/run switch. Values are world pixels per full cycle; the character stands
+# about 66px tall on screen, so a run cycle covers roughly one body height.
+const WALK_STRIDE := 56.0
+const RUN_STRIDE := 68.0
+# Hysteresis bands. Without them the idle/locomotion and walk/run choices flip
+# back and forth for single frames while speed hovers on a threshold.
+const LOCOMOTION_ENTER := 18.0
+const LOCOMOTION_EXIT := 8.0
+const RUN_ENTER := 241.0
+const RUN_EXIT := 225.0
+# Walk speed and the run/walk boundary are only 110px/s apart, so the band alone
+# cannot absorb the one-frame speed drop a hard landing or wall graze produces.
+# A downgrade out of run, or out of locomotion entirely, must persist instead.
+const SLOW_DEBOUNCE := 3
+# Below this speed a reversal is too small to be worth a braking pose.
+const SKID_SPEED := 150.0
+# A grounded pose is held briefly across one-frame floor losses, such as seams
+# between platforms, but a genuine fall still reads immediately once it gathers
+# vertical speed.
+const AIRBORNE_DEBOUNCE := 2
+const AIRBORNE_SPEED := 120.0
 const SPRITE_SCALE := 0.75
 const SPRITE_ORIGIN := Vector2(-15.0, -48.75)
 
@@ -61,6 +84,9 @@ var _death_announced: bool = false
 var _dust_time: float = 0.0
 var _trail_time: float = 0.0
 var _spring: Vector2 = Vector2.ONE
+var _stride_phase: float = 0.0
+var _airborne_frames: int = 0
+var _slow_frames: int = 0
 
 func _ready() -> void:
 	add_to_group("player")
@@ -283,6 +309,11 @@ func set_control_enabled(enabled: bool) -> void:
 		velocity.x = 0.0
 
 func _update_visuals(delta: float) -> void:
+	_airborne_frames = 0 if is_on_floor() else _airborne_frames + 1
+	var speed: float = absf(velocity.x)
+	var was_locomoting: bool = sprite.animation == &"walk" or sprite.animation == &"run"
+	var slow: bool = speed <= (RUN_EXIT if sprite.animation == &"run" else LOCOMOTION_EXIT)
+	_slow_frames = _slow_frames + 1 if slow else 0
 	var animation_name: String = "idle"
 	if dead:
 		animation_name = "death"
@@ -294,15 +325,38 @@ func _update_visuals(delta: float) -> void:
 		# Checked before the floor test so the take-off pose appears on the same
 		# frame the impulse is applied, while move_and_slide still reports floor.
 		animation_name = "jump"
-	elif not is_on_floor():
+	elif not is_on_floor() and (_airborne_frames >= AIRBORNE_DEBOUNCE or absf(velocity.y) > AIRBORNE_SPEED):
 		animation_name = "apex" if velocity.y < APEX_SPEED else "fall"
-	elif _landing_time > 0.0 and absf(velocity.x) < 50.0:
+	elif _landing_time > 0.0 and speed < 50.0:
 		animation_name = "land"
-	elif absf(velocity.x) > 12.0:
-		animation_name = "run" if absf(velocity.x) > WALK_SPEED + 8.0 else "walk"
+	elif is_on_floor() and speed > SKID_SPEED and facing * velocity.x < 0.0:
+		# Facing already flipped to the new input on the frame it arrived, so
+		# opposing facing and travel means the character is braking into a
+		# reversal. This is presentation only; turn acceleration is unchanged and
+		# no input is delayed.
+		animation_name = "skid"
+	elif speed > (LOCOMOTION_EXIT if was_locomoting else LOCOMOTION_ENTER) or _slow_frames < SLOW_DEBOUNCE and was_locomoting:
+		var was_running: bool = sprite.animation == &"run"
+		var running: bool = speed > (RUN_EXIT if was_running else RUN_ENTER)
+		# Hold the faster pose through a brief dip; a sustained slowdown still
+		# steps down on the next frame once the debounce elapses.
+		if was_running and not running and _slow_frames < SLOW_DEBOUNCE:
+			running = true
+		animation_name = "run" if running else "walk"
 	if sprite.animation != animation_name:
 		sprite.play(animation_name)
-	sprite.speed_scale = clampf(absf(velocity.x) / 200.0, 0.45, 1.75) if animation_name in ["walk", "run"] else 1.0
+	var locomoting: bool = animation_name == "walk" or animation_name == "run"
+	if locomoting:
+		# Advance the cycle by distance covered. Phase is kept in cycles, so a
+		# walk/run swap continues mid-stride instead of snapping back to frame 0.
+		_stride_phase = fposmod(_stride_phase + speed * delta / (RUN_STRIDE if animation_name == "run" else WALK_STRIDE), 1.0)
+		var count: int = sprite.sprite_frames.get_frame_count(animation_name)
+		sprite.speed_scale = 0.0
+		sprite.frame = clampi(int(_stride_phase * float(count)), 0, count - 1)
+	else:
+		if was_locomoting:
+			_stride_phase = 0.0
+		sprite.speed_scale = 1.0
 	sprite.flip_h = facing < 0.0
 	_spring = _spring.lerp(Vector2.ONE, minf(1.0, delta * 18.0))
 	sprite.scale = _spring * SPRITE_SCALE

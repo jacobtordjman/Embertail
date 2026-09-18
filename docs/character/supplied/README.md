@@ -96,3 +96,71 @@ controller logic and its own transition tests. Run is still a three-pose
 ping-pong, so foot sliding at speed is unchanged. Hurt and death share their
 first frame. Several adopted crops carry baked motion lines, stars or debris that
 now render as part of the sprite alongside `burst.gd` effects.
+
+## Expansion pass 2 — measured motion: cadence, state stability, braking
+
+Date: 2026-09-18. Engine: Godot 4.7.1 (macOS).
+
+This pass was driven by measurement rather than inspection. `tools/evaluate_motion.gd`
+drives the real controller with real input actions over the real level route and
+reports locomotion cadence against distance travelled, animation thrash with
+neighbouring states, state coverage and the ordering of the airborne arc. It
+measures and prints; it asserts nothing, so it cannot mask a regression.
+
+**Defect 1: walking slid worse than running.** Measured travel per locomotion
+cycle was 88.9 px walking against 66.7 px running, so the slower gait took the
+longer stride — backwards. Cause: cadence was `clamp(|velocity.x| / 200, …)`
+against different base rates per state, so effective frame rate rose faster than
+speed between walk and run. Locomotion cadence is now advanced by world distance
+(`WALK_STRIDE` 56 px, `RUN_STRIDE` 68 px per cycle) instead of elapsed time.
+Foot spacing is now constant at every speed, and because phase is carried in
+cycles the stride continues across a walk/run swap instead of snapping to frame
+zero. Measured after the change: walk 51.9 px/cycle, run 63.9 px/cycle over 49
+cycles of real play.
+
+**Defect 2: single-frame state flicker.** The route showed one-frame `walk` and
+`idle` states while sprinting. Walk speed and the run/walk boundary are only
+110 px/s apart, so the one-frame velocity drop from a hard landing or wall graze
+fell straight through the band. Added hysteresis (`LOCOMOTION_ENTER`/`EXIT`,
+`RUN_ENTER`/`EXIT`) plus a `SLOW_DEBOUNCE` of three frames, so a downgrade must
+persist. Also added `AIRBORNE_DEBOUNCE`, which holds a grounded pose across a
+one-frame floor loss at a platform seam while a genuine fall still reads
+immediately once it gathers vertical speed.
+
+Remaining short states were checked with their neighbours before being accepted:
+`run → apex:2f → fall` is a fast arc genuinely crossing the apex band, and
+`fall → walk:1f → jump` is the route pressing jump one frame after touchdown,
+which a human player also does. Neither is a pop, so neither was "fixed".
+
+**New state: skid.** `fox_r01_c09` was adopted in pass 1 but left unwired. It is
+a braking pose — haunches down, feet forward, dust ahead — and pairs with the
+run's passing pose into a two-frame reversal. It is selected when the character
+is grounded above 150 px/s with facing opposing travel; facing already flips on
+the frame new input arrives, so no input is delayed and turn acceleration is
+untouched. `fox_r01_c15` was rejected for this: it is a face-down wipeout, not a
+brake.
+
+**Run cycle: examined and left alone.** The handoff names the three-pose run as
+the top weakness. Every remaining crop was inspected at magnification:
+`fox_r01_c13`/`c14` are airborne, `c15` is the wipeout, and `c06`–`c08` are the
+walk. The sheet contains no fourth running pose, and 09/10/11/10 is already a
+contact/passing/contact/passing arrangement. Expanding it would mean inventing
+anatomy, so it was left as is and is reported as art-limited.
+
+Counts: 10 states / 42 playback frames / 27 source poses → 11 states / 44
+playback frames / 28 source poses.
+
+**Validation.** `./tests/run_checks.sh` exits 0 with integration 101/101 and
+character 40/40, up from 38; the two added assertions cover the skid appearing
+during a reversal and releasing once travel matches facing. Traversal is
+unchanged for the third pass running at x=5993, 45 embers, 13 jumps, 4 dashes,
+19.08 s, which is the evidence that reworking locomotion timing did not alter
+movement. Pack rebuilt and smoke-tested; all 28 source hashes verify.
+
+**Remaining limitations.** `land`, `idle`, `death` and `skid` never play during a
+straight-line speed run: landing is gated to under 50 px/s of horizontal speed,
+so at a sprint the impact reads only through the existing squash, and the route
+never stops, dies or reverses. That gating is deliberate — a crouch mid-sprint
+would fight the stride — but it does mean four drawn landing frames are unseen in
+ordinary forward play. Dash is still one drawing. Hurt and death still share
+their first frame. No start-run, turnaround or victory state exists.

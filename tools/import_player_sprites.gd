@@ -28,6 +28,10 @@ const SOURCES := {
 	"air_rise": ["fox_r01_c05", Vector2(45, 85)],
 	"air_dive": ["fox_r01_c06", Vector2(47, 78)],
 	"air_curl": ["fox_r01_c07", Vector2(48, 68)],
+	# Braking skid. The crop is 131px wide with dust ahead of the feet, so the
+	# anchor sits well right of the leg centroid to keep the cell clear, matching
+	# how the equally wide dash crop is anchored.
+	"skid_brake": ["fox_r01_c09", Vector2(88, 59)],
 	"launch": ["fox_r01_c10", Vector2(53, 83)],
 	"land_rise": ["fox_r01_c11", Vector2(47, 84)],
 	# Anchor measured after matte cleaning: this crop carries baked pale dust that
@@ -52,7 +56,10 @@ const SPEC := [
 	["dash", 23.0, false, ["14", "14", "14", "14"]],
 	["hurt", 11.0, false, ["hit", "topple", "dazed", "kneel"]],
 	["death", 9.0, false, ["hit", "topple", "downed", "downed"]],
-	["land", 15.0, false, ["land_hit", "land_rise", "crouch", "00"]]
+	["land", 15.0, false, ["land_hit", "land_rise", "crouch", "00"]],
+	# Braking into a reversal: plant and brake, then pick the new direction up
+	# through the run's passing pose.
+	["skid", 12.0, false, ["skid_brake", "10"]]
 ]
 
 func _initialize() -> void:

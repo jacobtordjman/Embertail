@@ -52,7 +52,10 @@ func setup() -> void:
 	var atlas: SpriteFrames = load("res://assets/sprites/player_frames.tres")
 	var names: PackedStringArray = atlas.get_animation_names()
 	label(ui, "EMBERTRAIL  /  CHARACTER MOTION STUDY", Vector2(20, 14), 21, Color("f8e9bd"))
-	label(ui, "%d states from 27 supplied source poses · dashed line = feet anchor, tick = body centre" % names.size(),
+	var playback: int = 0
+	for name in names:
+		playback += atlas.get_frame_count(name)
+	label(ui, "%d states · %d playback frames · line = shared feet anchor, tick = body centre" % [names.size(), playback],
 		Vector2(21, 42), 11, Color("b4cbb1"))
 	for index in range(names.size()):
 		var name: String = names[index]
