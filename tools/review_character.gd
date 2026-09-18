@@ -1,7 +1,22 @@
 extends SceneTree
 
+# Renders every state in the current SpriteFrames onto one board, with a shared
+# floor line and body centre line so feet anchoring can be judged across states.
+# The state list is read from the resource: it never needs editing when the
+# animation set changes.
+
+const BOARD := Vector2(960, 540)
+const COLUMNS := 4
+const PANEL := Vector2(224, 136)
+const GAP := Vector2(12, 9)
+const ORIGIN := Vector2(18, 74)
+# Cell-space anchor from the importer, expressed relative to the 160px cell centre.
+const CELL := 160.0
+const ANCHOR := Vector2(100.0, 145.0)
+const FLOOR_Y := 112.0
+const CENTRE_X := 112.0
+
 var sprites: Array[AnimatedSprite2D] = []
-var animation_names: Array[String] = ["idle", "walk", "run", "jump", "fall", "land", "dash", "hurt", "death"]
 var ticks: int = 0
 var elapsed: float = 0.0
 
@@ -17,6 +32,14 @@ func label(parent: Node, words: String, at: Vector2, size: int, color: Color) ->
 	node.add_theme_color_override("font_color", color)
 	parent.add_child(node)
 
+func guide(parent: Node, at: Vector2, size: Vector2, color: Color) -> void:
+	var line := ColorRect.new()
+	line.color = color
+	line.position = at
+	line.size = size
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(line)
+
 func setup() -> void:
 	TranslationServer.set_locale("en")
 	var ui := Control.new()
@@ -24,33 +47,41 @@ func setup() -> void:
 	root.add_child(ui)
 	var bg := ColorRect.new()
 	bg.color = Color("182c2c")
-	bg.size = Vector2(960, 540)
+	bg.size = BOARD
 	ui.add_child(bg)
-	label(ui, "EMBERTRAIL  /  CHARACTER MOTION STUDY", Vector2(24, 17), 22, Color("f8e9bd"))
-	label(ui, "13 supplied sprites · original idle/walk/run/dash art · derived transition poses", Vector2(25, 46), 12, Color("b4cbb1"))
 	var atlas: SpriteFrames = load("res://assets/sprites/player_frames.tres")
-	for index in range(9):
+	var names: PackedStringArray = atlas.get_animation_names()
+	label(ui, "EMBERTRAIL  /  CHARACTER MOTION STUDY", Vector2(20, 14), 21, Color("f8e9bd"))
+	label(ui, "%d states from 27 supplied source poses · dashed line = feet anchor, tick = body centre" % names.size(),
+		Vector2(21, 42), 11, Color("b4cbb1"))
+	for index in range(names.size()):
+		var name: String = names[index]
 		var panel := Panel.new()
 		panel.layout_direction = Control.LAYOUT_DIRECTION_LTR
-		panel.position = Vector2(24 + index % 3 * 312, 77 + int(index / 3) * 145)
-		panel.size = Vector2(288, 136)
+		panel.position = ORIGIN + Vector2((index % COLUMNS) * (PANEL.x + GAP.x), int(index / COLUMNS) * (PANEL.y + GAP.y))
+		panel.size = PANEL
+		panel.clip_contents = true
 		var style := StyleBoxFlat.new()
 		style.bg_color = Color("2a4640")
 		style.set_corner_radius_all(8)
 		panel.add_theme_stylebox_override("panel", style)
 		ui.add_child(panel)
-		var name: String = animation_names[index]
-		label(panel, name.to_upper(), Vector2(12, 9), 12, Color("edcc92"))
+		# Floor line and centre tick: the reference the poses are judged against.
+		guide(panel, Vector2(10, FLOOR_Y), Vector2(PANEL.x - 20, 1), Color(0.60, 0.76, 0.70, 0.55))
+		guide(panel, Vector2(CENTRE_X, 24), Vector2(1, PANEL.y - 34), Color(0.60, 0.76, 0.70, 0.22))
+		label(panel, name.to_upper(), Vector2(11, 7), 12, Color("edcc92"))
 		var sprite := AnimatedSprite2D.new()
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		sprite.sprite_frames = atlas
 		sprite.animation = name
-		sprite.position = Vector2(150, 43)
-		sprite.scale = Vector2.ONE * 1.3
+		# Place the cell so its feet anchor sits exactly on the floor line.
+		sprite.position = Vector2(CENTRE_X - (ANCHOR.x - CELL / 2.0), FLOOR_Y - (ANCHOR.y - CELL / 2.0))
 		panel.add_child(sprite)
 		sprites.append(sprite)
-		label(panel, "%d FRAMES" % atlas.get_frame_count(name), Vector2(12, 113), 10, Color("a2bba4"))
-	label(ui, "Review tool only: one-shot animations repeat here for inspection.", Vector2(24, 519), 10, Color("a2bba4"))
+		var loops: String = "loop" if atlas.get_animation_loop(name) else "once"
+		label(panel, "%d frames · %.0f fps · %s" % [atlas.get_frame_count(name), atlas.get_animation_speed(name), loops],
+			Vector2(11, PANEL.y - 20), 10, Color("a2bba4"))
+	label(ui, "Review tool only: one-shot animations repeat here for inspection.", Vector2(20, BOARD.y - 19), 10, Color("a2bba4"))
 
 func _process(delta: float) -> bool:
 	elapsed += delta

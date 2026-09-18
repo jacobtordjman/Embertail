@@ -24,6 +24,11 @@ const DASH_SPEED := 600.0
 const DASH_DURATION := 0.18
 const DASH_COOLDOWN := 0.65
 const FALL_LIMIT := 850.0
+# Vertical speed band that reads as the weightless top of an arc. Ascent, apex
+# and descent are separate states so the airborne pose does not flip on the sign
+# of velocity.y alone. Gravity moves velocity.y in one direction during free
+# flight, so the two thresholds cannot oscillate frame to frame.
+const APEX_SPEED := 90.0
 const SPRITE_SCALE := 0.75
 const SPRITE_ORIGIN := Vector2(-15.0, -48.75)
 
@@ -285,10 +290,12 @@ func _update_visuals(delta: float) -> void:
 		animation_name = "hurt"
 	elif is_dashing():
 		animation_name = "dash"
-	elif velocity.y < -10.0:
+	elif velocity.y < -APEX_SPEED:
+		# Checked before the floor test so the take-off pose appears on the same
+		# frame the impulse is applied, while move_and_slide still reports floor.
 		animation_name = "jump"
 	elif not is_on_floor():
-		animation_name = "fall"
+		animation_name = "apex" if velocity.y < APEX_SPEED else "fall"
 	elif _landing_time > 0.0 and absf(velocity.x) < 50.0:
 		animation_name = "land"
 	elif absf(velocity.x) > 12.0:

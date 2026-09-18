@@ -1,6 +1,6 @@
 # Embertrail asset manifest
 
-World art, enemies, collectibles and audio were drawn or synthesized locally by `tools/generate_assets.py`. Player art uses the user's 13 supplied PNGs, copied unchanged into `sprites/source_fox/`. `provenance.json` records their original paths and SHA256 hashes. No downloaded sprite packs, samples, or paid tools are used.
+World art, enemies, collectibles and audio were drawn or synthesized locally by `tools/generate_assets.py`. Player art uses 27 of the user's supplied PNGs, copied unchanged into `sprites/source_fox/`. `provenance.json` records their original paths and SHA256 hashes. No downloaded sprite packs, samples, or paid tools are used.
 
 `tools/import_player_sprites.gd` aligns these crops by body/feet, removes thin neutral exterior matte fringes in the generated atlas, and derives missing transition poses. The original source files are untouched. The large initial reference image is archived as `source_art/character_reference.png` and excluded from the runtime pack. Extra source poses and their metadata are archived in `source_art/`; they are not active player frames.
 
@@ -8,8 +8,8 @@ World art, enemies, collectibles and audio were drawn or synthesized locally by 
 
 | Path | Dimensions | Layout |
 | --- | --- | --- |
-| `sprites/player.png` | 1280 × 1440 | 160 × 160 cells, eight columns. Rows 0–8: idle, walk, run, jump, fall, dash, hurt, death, land. Facing right; mirror for left. Feet anchor (100,145), rendered at 0.75 scale. |
-| `sprites/player_frames.tres` | SpriteFrames resource | 44 playback frames: idle 8; walk, run, jump, fall, dash, hurt and land 4 each; death 8. Repeated/derived poses are included; these are not 44 independently drawn source images. |
+| `sprites/player.png` | 1280 × 1600 | 160 × 160 cells, eight columns. Rows 0–9: idle, walk, run, jump, apex, fall, dash, hurt, death, land. Facing right; mirror for left. Feet anchor (100,145), rendered at 0.75 scale. |
+| `sprites/player_frames.tres` | SpriteFrames resource | 42 playback frames: idle 8; apex 2; walk, run, jump, fall, dash, hurt, death and land 4 each. Drawn from 27 distinct source poses; idle and fall repeat poses to close their loops, so these are not 42 independently drawn images. |
 | `sprites/enemy.png` | 160 × 64 | 40 × 32 cells, four columns. Row 0: walking moss beetle. Row 1: defeated beetle and sparkles. |
 | `sprites/coin.png` | 144 × 24 | 24 × 24 cells, six columns. Looping rotating amber seed. |
 | `sprites/heart.png` | 16 × 16 | One HUD heart. |
@@ -40,6 +40,6 @@ From the project root run `python3 tools/generate_assets.py`. The seed and synth
 
 ## Character refinement
 
-Idle, walk, run and dash retain the supplied artwork. Jump, fall, hurt and death use modest translations/rotations of supplied poses; landing sequences the crouch and standing poses. These derived states are placeholders for dedicated action drawings. The importer preserves anatomy rather than generating new clothing or facial details.
+Every state now draws on separately supplied poses. Jump, apex, fall and landing use the sheet's airborne and touch-down art; hurt and death use its recoil, topple, downed and kneeling art. The only remaining synthetic motion is a small vertical translation across the ascent/apex frames and the four-frame dash, which still animates one supplied burst pose because the sheet contains no second dash drawing. The importer preserves anatomy rather than generating new clothing or facial details.
 
 For character-only regeneration: `python3 tools/generate_player.py --review`. This invokes the installed Godot 4 importer and updates the player atlas, SpriteFrames resource, and idle detail preview without touching world art or audio. The previous Python drawing rig remains a fallback when supplied source art is absent. See `docs/character/supplied/README.md` for review and verification.

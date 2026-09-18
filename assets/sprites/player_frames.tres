@@ -82,101 +82,93 @@ region = Rect2(320, 480, 160, 160)
 atlas = ExtResource("1")
 region = Rect2(480, 480, 160, 160)
 
-[sub_resource type="AtlasTexture" id="fall0"]
+[sub_resource type="AtlasTexture" id="apex0"]
 atlas = ExtResource("1")
 region = Rect2(0, 640, 160, 160)
 
-[sub_resource type="AtlasTexture" id="fall1"]
+[sub_resource type="AtlasTexture" id="apex1"]
 atlas = ExtResource("1")
 region = Rect2(160, 640, 160, 160)
 
-[sub_resource type="AtlasTexture" id="fall2"]
-atlas = ExtResource("1")
-region = Rect2(320, 640, 160, 160)
-
-[sub_resource type="AtlasTexture" id="fall3"]
-atlas = ExtResource("1")
-region = Rect2(480, 640, 160, 160)
-
-[sub_resource type="AtlasTexture" id="dash0"]
+[sub_resource type="AtlasTexture" id="fall0"]
 atlas = ExtResource("1")
 region = Rect2(0, 800, 160, 160)
 
-[sub_resource type="AtlasTexture" id="dash1"]
+[sub_resource type="AtlasTexture" id="fall1"]
 atlas = ExtResource("1")
 region = Rect2(160, 800, 160, 160)
 
-[sub_resource type="AtlasTexture" id="dash2"]
+[sub_resource type="AtlasTexture" id="fall2"]
 atlas = ExtResource("1")
 region = Rect2(320, 800, 160, 160)
 
-[sub_resource type="AtlasTexture" id="dash3"]
+[sub_resource type="AtlasTexture" id="fall3"]
 atlas = ExtResource("1")
 region = Rect2(480, 800, 160, 160)
 
-[sub_resource type="AtlasTexture" id="hurt0"]
+[sub_resource type="AtlasTexture" id="dash0"]
 atlas = ExtResource("1")
 region = Rect2(0, 960, 160, 160)
 
-[sub_resource type="AtlasTexture" id="hurt1"]
+[sub_resource type="AtlasTexture" id="dash1"]
 atlas = ExtResource("1")
 region = Rect2(160, 960, 160, 160)
 
-[sub_resource type="AtlasTexture" id="hurt2"]
+[sub_resource type="AtlasTexture" id="dash2"]
 atlas = ExtResource("1")
 region = Rect2(320, 960, 160, 160)
 
-[sub_resource type="AtlasTexture" id="hurt3"]
+[sub_resource type="AtlasTexture" id="dash3"]
 atlas = ExtResource("1")
 region = Rect2(480, 960, 160, 160)
 
-[sub_resource type="AtlasTexture" id="death0"]
+[sub_resource type="AtlasTexture" id="hurt0"]
 atlas = ExtResource("1")
 region = Rect2(0, 1120, 160, 160)
 
-[sub_resource type="AtlasTexture" id="death1"]
+[sub_resource type="AtlasTexture" id="hurt1"]
 atlas = ExtResource("1")
 region = Rect2(160, 1120, 160, 160)
 
-[sub_resource type="AtlasTexture" id="death2"]
+[sub_resource type="AtlasTexture" id="hurt2"]
 atlas = ExtResource("1")
 region = Rect2(320, 1120, 160, 160)
 
-[sub_resource type="AtlasTexture" id="death3"]
+[sub_resource type="AtlasTexture" id="hurt3"]
 atlas = ExtResource("1")
 region = Rect2(480, 1120, 160, 160)
 
-[sub_resource type="AtlasTexture" id="death4"]
-atlas = ExtResource("1")
-region = Rect2(640, 1120, 160, 160)
-
-[sub_resource type="AtlasTexture" id="death5"]
-atlas = ExtResource("1")
-region = Rect2(800, 1120, 160, 160)
-
-[sub_resource type="AtlasTexture" id="death6"]
-atlas = ExtResource("1")
-region = Rect2(960, 1120, 160, 160)
-
-[sub_resource type="AtlasTexture" id="death7"]
-atlas = ExtResource("1")
-region = Rect2(1120, 1120, 160, 160)
-
-[sub_resource type="AtlasTexture" id="land0"]
+[sub_resource type="AtlasTexture" id="death0"]
 atlas = ExtResource("1")
 region = Rect2(0, 1280, 160, 160)
 
-[sub_resource type="AtlasTexture" id="land1"]
+[sub_resource type="AtlasTexture" id="death1"]
 atlas = ExtResource("1")
 region = Rect2(160, 1280, 160, 160)
 
-[sub_resource type="AtlasTexture" id="land2"]
+[sub_resource type="AtlasTexture" id="death2"]
 atlas = ExtResource("1")
 region = Rect2(320, 1280, 160, 160)
 
-[sub_resource type="AtlasTexture" id="land3"]
+[sub_resource type="AtlasTexture" id="death3"]
 atlas = ExtResource("1")
 region = Rect2(480, 1280, 160, 160)
+
+[sub_resource type="AtlasTexture" id="land0"]
+atlas = ExtResource("1")
+region = Rect2(0, 1440, 160, 160)
+
+[sub_resource type="AtlasTexture" id="land1"]
+atlas = ExtResource("1")
+region = Rect2(160, 1440, 160, 160)
+
+[sub_resource type="AtlasTexture" id="land2"]
+atlas = ExtResource("1")
+region = Rect2(320, 1440, 160, 160)
+
+[sub_resource type="AtlasTexture" id="land3"]
+atlas = ExtResource("1")
+region = Rect2(480, 1440, 160, 160)
 
 [resource]
 metadata/frame_size = 160
@@ -211,13 +203,17 @@ animations = [
 {"duration": 1.0, "texture": SubResource("jump1")},
 {"duration": 1.0, "texture": SubResource("jump2")},
 {"duration": 1.0, "texture": SubResource("jump3")}
-], "loop": false, "name": &"jump", "speed": 16.0},
+], "loop": false, "name": &"jump", "speed": 14.0},
+{"frames": [
+{"duration": 1.0, "texture": SubResource("apex0")},
+{"duration": 1.0, "texture": SubResource("apex1")}
+], "loop": true, "name": &"apex", "speed": 8.0},
 {"frames": [
 {"duration": 1.0, "texture": SubResource("fall0")},
 {"duration": 1.0, "texture": SubResource("fall1")},
 {"duration": 1.0, "texture": SubResource("fall2")},
 {"duration": 1.0, "texture": SubResource("fall3")}
-], "loop": true, "name": &"fall", "speed": 9.0},
+], "loop": true, "name": &"fall", "speed": 10.0},
 {"frames": [
 {"duration": 1.0, "texture": SubResource("dash0")},
 {"duration": 1.0, "texture": SubResource("dash1")},
@@ -229,21 +225,17 @@ animations = [
 {"duration": 1.0, "texture": SubResource("hurt1")},
 {"duration": 1.0, "texture": SubResource("hurt2")},
 {"duration": 1.0, "texture": SubResource("hurt3")}
-], "loop": false, "name": &"hurt", "speed": 18.0},
+], "loop": false, "name": &"hurt", "speed": 11.0},
 {"frames": [
 {"duration": 1.0, "texture": SubResource("death0")},
 {"duration": 1.0, "texture": SubResource("death1")},
 {"duration": 1.0, "texture": SubResource("death2")},
-{"duration": 1.0, "texture": SubResource("death3")},
-{"duration": 1.0, "texture": SubResource("death4")},
-{"duration": 1.0, "texture": SubResource("death5")},
-{"duration": 1.0, "texture": SubResource("death6")},
-{"duration": 1.0, "texture": SubResource("death7")}
-], "loop": false, "name": &"death", "speed": 12.0},
+{"duration": 1.0, "texture": SubResource("death3")}
+], "loop": false, "name": &"death", "speed": 9.0},
 {"frames": [
 {"duration": 1.0, "texture": SubResource("land0")},
 {"duration": 1.0, "texture": SubResource("land1")},
 {"duration": 1.0, "texture": SubResource("land2")},
 {"duration": 1.0, "texture": SubResource("land3")}
-], "loop": false, "name": &"land", "speed": 25.0}
+], "loop": false, "name": &"land", "speed": 15.0}
 ]

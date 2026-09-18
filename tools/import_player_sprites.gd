@@ -6,6 +6,7 @@ const CELL := 160
 const COLUMNS := 8
 const ANCHOR := Vector2(100, 145)
 const SOURCES := {
+	# Row 0 of the supplied sheet: grounded standing, walking, running and dash.
 	"00": ["fox_r00_c00", Vector2(46, 86)],
 	"01": ["fox_r00_c01", Vector2(45, 86)],
 	"02": ["fox_r00_c02", Vector2(46, 85)],
@@ -18,18 +19,40 @@ const SOURCES := {
 	"10": ["fox_r00_c10", Vector2(63, 67)],
 	"11": ["fox_r00_c11", Vector2(65, 71)],
 	"14": ["fox_r00_c14", Vector2(92, 69)],
-	"crouch": ["fox_r01_c00", Vector2(47, 74)]
+	"crouch": ["fox_r01_c00", Vector2(47, 74)],
+	# Row 1: airborne and landing poses with real limb articulation. Adopted in
+	# the pass-1 expansion to replace whole-image tilts of grounded frames.
+	"air_tuck": ["fox_r01_c02", Vector2(40, 76)],
+	"air_reach": ["fox_r01_c03", Vector2(44, 76)],
+	"air_hang": ["fox_r01_c04", Vector2(43, 75)],
+	"air_rise": ["fox_r01_c05", Vector2(45, 85)],
+	"air_dive": ["fox_r01_c06", Vector2(47, 78)],
+	"air_curl": ["fox_r01_c07", Vector2(48, 68)],
+	"launch": ["fox_r01_c10", Vector2(53, 83)],
+	"land_rise": ["fox_r01_c11", Vector2(47, 84)],
+	# Anchor measured after matte cleaning: this crop carries baked pale dust that
+	# clean_matte_edge strips, which lifts the silhouette bottom by six pixels.
+	"land_hit": ["fox_r01_c12", Vector2(47, 79)],
+	# Row 6: damage and collapse poses. fox_r06_c03/c06 are deliberately not
+	# adopted; those crops contain two overlapping characters.
+	"hit": ["fox_r06_c02", Vector2(61, 56)],
+	"dazed": ["fox_r06_c04", Vector2(44, 70)],
+	"topple": ["fox_r06_c05", Vector2(49, 67)],
+	"downed": ["fox_r06_c07", Vector2(57, 62)],
+	"kneel": ["fox_r06_c08", Vector2(41, 61)]
 }
 const SPEC := [
 	["idle", 8.0, true, ["00", "01", "02", "03", "05", "02", "01", "00"]],
 	["walk", 9.0, true, ["06", "07", "08", "07"]],
 	["run", 12.0, true, ["09", "10", "11", "10"]],
-	["jump", 16.0, false, ["crouch", "crouch", "crouch", "crouch"]],
-	["fall", 9.0, true, ["07", "07", "07", "07"]],
+	["jump", 14.0, false, ["launch", "air_rise", "air_reach", "air_hang"]],
+	# Apex shares air_hang with the last ascent frame so the handoff is seamless.
+	["apex", 8.0, true, ["air_hang", "air_tuck"]],
+	["fall", 10.0, true, ["air_tuck", "air_dive", "air_curl", "air_dive"]],
 	["dash", 23.0, false, ["14", "14", "14", "14"]],
-	["hurt", 18.0, false, ["03", "03", "03", "03"]],
-	["death", 12.0, false, ["00", "00", "00", "00", "00", "00", "00", "00"]],
-	["land", 25.0, false, ["crouch", "crouch", "07", "00"]]
+	["hurt", 11.0, false, ["hit", "topple", "dazed", "kneel"]],
+	["death", 9.0, false, ["hit", "topple", "downed", "downed"]],
+	["land", 15.0, false, ["land_hit", "land_rise", "crouch", "00"]]
 ]
 
 func _initialize() -> void:
@@ -67,46 +90,27 @@ func clean_matte_edge(image: Image) -> void:
 
 func pose(source: String, animation: String, index: int) -> Image:
 	var image: Image = aligned(source)
-	var angle: float = 0.0
 	var offset := Vector2.ZERO
+	# Jump, apex, fall, land, hurt and death now use separately drawn source
+	# poses, so they need no synthetic rotation. Only the airborne rise and the
+	# dash keep a deliberate translation: the rise carries the body upward
+	# between its two drawn poses, and only one dash pose exists in the supplied
+	# art. These are positioning, not substitutes for missing anatomy.
 	match animation:
 		"jump":
-			angle = deg_to_rad([-5.0, -2.0, 1.0, 3.0][index])
-			offset.y = [-1.0, -2.0, -1.0, 0.0][index]
-		"fall":
-			angle = deg_to_rad([-3.0, -1.0, 1.0, 0.0][index])
+			offset.y = [0.0, -3.0, -5.0, -4.0][index]
+		"apex":
+			offset.y = [-2.0, 0.0][index]
 		"dash":
 			offset = Vector2([0, 1, 2, 0][index], [0, -1, 0, 0][index])
-		"hurt":
-			angle = deg_to_rad([-18.0, -14.0, -10.0, -6.0][index])
-		"death":
-			angle = deg_to_rad([0.0, -12.0, -28.0, -48.0, -67.0, -83.0, -87.0, -88.0][index])
-		"land":
-			offset.y = [0, 1, 0, 0][index]
-	if is_zero_approx(angle) and offset == Vector2.ZERO:
+	if offset == Vector2.ZERO:
 		return image
-	var pivot := Vector2(100, 117)
 	var result := Image.create(CELL, CELL, false, Image.FORMAT_RGBA8)
-	# The death silhouette rests on the same floor baseline at every angle.
-	if animation == "death":
-		var highest_y: float = 0.0
-		var minimum_x: float = CELL
-		var maximum_x: float = 0.0
-		for y in range(CELL):
-			for x in range(CELL):
-				if image.get_pixel(x, y).a > 0.0:
-					var point: Vector2 = (Vector2(x, y) - pivot).rotated(angle) + pivot
-					highest_y = maxf(highest_y, point.y)
-					minimum_x = minf(minimum_x, point.x)
-					maximum_x = maxf(maximum_x, point.x)
-		offset.y = ANCHOR.y - highest_y
-		offset.x = maxf(0.0, 3.0 - minimum_x) - maxf(0.0, maximum_x - 156.0)
 	for y in range(CELL):
 		for x in range(CELL):
-			var from: Vector2 = (Vector2(x, y) - pivot - offset).rotated(-angle) + pivot
-			var pixel := Vector2i(roundi(from.x), roundi(from.y))
-			if pixel.x >= 0 and pixel.y >= 0 and pixel.x < CELL and pixel.y < CELL:
-				result.set_pixel(x, y, image.get_pixelv(pixel))
+			var from := Vector2i(roundi(float(x) - offset.x), roundi(float(y) - offset.y))
+			if from.x >= 0 and from.y >= 0 and from.x < CELL and from.y < CELL:
+				result.set_pixel(x, y, image.get_pixelv(from))
 	return result
 
 func generate() -> void:
@@ -149,5 +153,14 @@ func generate() -> void:
 	board.fill(Color("243b37"))
 	board.blend_rect(preview, Rect2i(0, 0, 420, 480), Vector2i.ZERO)
 	board.save_png(ProjectSettings.globalize_path("res://docs/character/supplied/idle-detail.png"))
-	print("Imported 13 original user sprites: 44 playback frames, 9 states, feet aligned; missing actions derived from supplied art.")
+	# Report what was actually drawn versus merely replayed, so frame counts are
+	# never mistaken for independently drawn poses.
+	var playback: int = 0
+	var used: Dictionary = {}
+	for spec in SPEC:
+		playback += (spec[3] as Array).size()
+		for key in spec[3]:
+			used[key] = true
+	print("Imported %d source poses (%d supplied PNGs available): %d playback frames across %d states, feet aligned at %s." % [
+		used.size(), SOURCES.size(), playback, SPEC.size(), str(ANCHOR)])
 	quit()

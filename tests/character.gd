@@ -54,30 +54,70 @@ func run_checks() -> void:
 		if kind == "land": landing_sounds += 1)
 	var animations: SpriteFrames = player.sprite.sprite_frames
 	var sheet: Image = load("res://assets/sprites/player.png").get_image()
-	check(sheet.get_size() == Vector2i(1280, 1440), "supplied sprites use consistently padded 160px cells")
+	check(sheet.get_size() == Vector2i(1280, 1600), "supplied sprites use consistently padded 160px cells")
 	var total_frames: int = 0
 	var valid_cells: bool = true
 	var no_clipping: bool = true
 	var distinct_states: bool = true
+	# Grounded states must share one floor line; a state whose feet wander would
+	# make the character pop vertically as it switches pose.
+	var grounded_states: Array[String] = ["idle", "walk", "run", "land", "hurt", "death"]
+	var grounded_aligned: bool = true
+	var library: Dictionary = {}
 	for name in animations.get_animation_names():
 		var fingerprints: Dictionary = {}
+		var lowest: int = 0
+		var highest: int = 160
 		for index in range(animations.get_frame_count(name)):
 			var texture: AtlasTexture = animations.get_frame_texture(name, index)
 			var region := Rect2i(texture.region)
-			valid_cells = valid_cells and region.size == Vector2i(160, 160) and Rect2i(0, 0, 1280, 1440).encloses(region)
+			valid_cells = valid_cells and region.size == Vector2i(160, 160) and Rect2i(0, 0, 1280, 1600).encloses(region)
 			var cell: Image = sheet.get_region(region)
 			var used: Rect2i = cell.get_used_rect()
 			no_clipping = no_clipping and used.position.x > 0 and used.position.y > 0 and used.end.x < 160 and used.end.y < 160
 			fingerprints[hash(cell.get_data())] = true
+			library[hash(cell.get_data())] = true
+			lowest = maxi(lowest, used.end.y)
+			highest = mini(highest, used.end.y)
 			total_frames += 1
-		distinct_states = distinct_states and fingerprints.size() >= 3
-	check(total_frames == 44 and valid_cells, "all 44 supplied/derived playback frames have valid atlas regions")
+		# Two-frame states cannot show three poses; require every frame distinct.
+		distinct_states = distinct_states and fingerprints.size() >= mini(3, animations.get_frame_count(name))
+		if name in grounded_states:
+			grounded_aligned = grounded_aligned and lowest - highest <= 3
+	check(total_frames == 42 and valid_cells, "all 42 playback frames have valid atlas regions")
 	check(no_clipping, "ears, paws and tails remain inside every animation cell")
 	check(distinct_states, "every state contains distinct poses instead of repeated still frames")
+	check(grounded_aligned, "grounded states keep their feet on a shared floor line")
+	# The expansion replaced whole-image tilts with separately drawn source art,
+	# so the atlas must hold materially more unique cells than states.
+	check(library.size() >= 24, "atlas holds at least 24 distinct poses rather than repeated transforms")
 	check(animations.has_animation("land") and not animations.get_animation_loop("land"), "landing has a dedicated non-looping recovery")
 	check(animations.get_frame_count("run") == 4 and animations.get_animation_loop("run"), "supplied running poses play as a continuous cycle")
 	check(not animations.get_animation_loop("death"), "death settles without looping")
 	check(animations.has_animation("walk") and animations.get_frame_count("walk") == 4, "upright walking has a separate supplied pose cycle")
+	check(animations.has_animation("apex") and animations.get_animation_loop("apex"), "the arc has a dedicated looping apex state")
+	check(not animations.get_animation_loop("jump"), "the ascent plays once instead of cycling in the air")
+
+	# Ascent, apex and descent must be selected by vertical speed, and the take-off
+	# pose must appear on the same frame the impulse lands.
+	await place(Vector2(150, 465))
+	await frames(6)
+	Input.action_press("jump")
+	await frames(1)
+	Input.action_release("jump")
+	check(player.velocity.y < -player.APEX_SPEED and player.sprite.animation == "jump", "take-off shows the ascent pose immediately")
+	var saw_apex: bool = false
+	var saw_fall: bool = false
+	var airborne_frames: int = 0
+	while not player.is_on_floor() and airborne_frames < 120:
+		await frames(1)
+		airborne_frames += 1
+		if player.sprite.animation == "apex":
+			saw_apex = true
+		elif player.sprite.animation == "fall":
+			saw_fall = true and saw_apex
+	check(saw_apex, "a weightless apex pose plays near the top of the arc")
+	check(saw_fall, "the descent pose follows the apex rather than replacing it")
 
 	await place(Vector2(150, 465))
 	await frames(5)
